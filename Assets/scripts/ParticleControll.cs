@@ -7,6 +7,7 @@ public class ParticleControll : MonoBehaviour {
     private ParticleSystem.Particle[] particles;
     private ParticleSystem.MainModule particleSystemMainModule;
     public Vector2 shakeRange;
+    public float gravity;
     public Vector3 allowedDistance;
     private bool shakeParticlesOn;
     private int particleCountGlobal = 0;
@@ -14,16 +15,12 @@ public class ParticleControll : MonoBehaviour {
     private int[] musicNumbers = new int[] {1,2,3,4,5,6,7,8,7,6,5,4,3,2,3};
     private int totalNotes = 66;
     public Color[] musicBar;
-    public bool circle = false;
-    private Vector2 center = Vector2.zero;
-    public float speed = 1;
-    public float diameter = 10;
-    public float circleTolerance = 0.2f;
     // Use this for initialization
     void Start () {
         
         particleSystem = GetComponent<ParticleSystem>();
         particleSystemMainModule = particleSystem.main;
+        StartCoroutine(Gravity());
     }
 	
 
@@ -56,10 +53,6 @@ public class ParticleControll : MonoBehaviour {
         if (shakeParticlesOn)
         {
             ShakeParticles();
-        }
-        if (circle)
-        {
-            GravityAttractor();
         }
     }
 
@@ -109,6 +102,7 @@ public class ParticleControll : MonoBehaviour {
     void GravityAttractor ()
     {
         int particleCount = particleSystem.particleCount;
+
         particles = new ParticleSystem.Particle[particleCount];
 
         particleSystem.GetParticles(particles);
@@ -117,22 +111,33 @@ public class ParticleControll : MonoBehaviour {
         {
             Vector3 velocity = particles[i].velocity;
             Vector3 position = particles[i].position;
-            Vector2 particleV2 = new Vector2(position.x, position.y);
-            Vector2 move = Vector2.MoveTowards(center, particleV2, speed);
-            if (Vector3.Distance(particleV2, center) > diameter)
+            if (particles[i].position.z > allowedDistance.z)
             {
-                move = -move;
+                particles[i].velocity = new Vector3(particles[i].velocity.x, particles[i].velocity.y, 0);
+                //particles[i].position = new Vector3(position.x, position.y, allowedDistance.z);
             }
-            if (Vector2.SqrMagnitude(move) > circleTolerance)
+            /*
+            if (Mathf.Abs(position.x) > allowedDistance.x)
             {
-                particles[i].position = new Vector3(position.x + move.x, position.y + move.y, position.z);
+                Debug.Log(position.x + " " +allowedDistance.x + " " + Mathf.Abs(position.x));
+                particles[i].velocity = new Vector3(-particles[i].velocity.x, particles[i].velocity.y, particles[i].velocity.z);
             }
-            
-            
+            if (Mathf.Abs(position.y) > allowedDistance.y)
+            {
+                particles[i].velocity = new Vector3(particles[i].velocity.x, -particles[i].velocity.y, particles[i].velocity.z);
+            }*/
+        }
 
-        }        
+        
 
         particleSystem.SetParticles(particles, particleCount);
+    }
+
+    IEnumerator Gravity()
+    {
+        yield return new WaitForSeconds(1);
+        GravityAttractor();
+        StartCoroutine(Gravity());
     }
 
     void ShakeParticles()
