@@ -35,7 +35,7 @@ public class ParticleControll : MonoBehaviour {
             
             var emitParams = new ParticleSystem.EmitParams();
             emitParams.startColor = GetColor();
-            emitParams.velocity = new Vector3(Random.Range(-particleSpeedXY, particleSpeedXY), Random.Range(-particleSpeedXY, particleSpeedXY), 1f);
+            emitParams.velocity = new Vector3(Random.Range(-particleSpeedXY, particleSpeedXY), Random.Range(-particleSpeedXY, particleSpeedXY), 0.5f);
             particleSystem.Emit(emitParams, 1);
             particleCountGlobal++;
         }
