@@ -5,6 +5,11 @@ using System.Collections.Generic;
 [RequireComponent(typeof(ParticleSystem))]
 public class PlexusParticles : MonoBehaviour {
 
+    private Vector3[] newVertices;
+    private Vector2[] newUV;
+    private int[] newTriangles;
+    public int maxTriangles = 100;
+    public bool triangles = true;
     public float maxDistance = 1.0f;
     public LineRenderer lineRendererTemplate;
     List<LineRenderer> lineRenderers= new List<LineRenderer>();
@@ -23,10 +28,20 @@ public class PlexusParticles : MonoBehaviour {
 	// Update is called once per frame
 	void LateUpdate () {
         int maxParticles = particleSystemMainModule.maxParticles;
-
+        int maxVertices = maxTriangles * 3;
+        int vertCount = 0;
         if (particles == null || particles.Length < maxParticles)
         {
             particles = new ParticleSystem.Particle[maxParticles];
+        }
+        if (triangles)
+        {
+            if (newVertices == null || newVertices.Length < maxVertices)
+            {
+                newVertices = new Vector3[maxVertices];
+                newUV = new Vector2[maxVertices];
+                newTriangles = new int[maxVertices];
+            }
         }
 
         particleSystem.GetParticles(particles);
@@ -34,7 +49,7 @@ public class PlexusParticles : MonoBehaviour {
         int lineRendererIndex = 0;
         int lineRendererCount = lineRenderers.Count;
         float maxDistanceSqr = maxDistance * maxDistance;
-
+        
         switch (particleSystemMainModule.simulationSpace)
         {
             case ParticleSystemSimulationSpace.Local:
@@ -70,8 +85,16 @@ public class PlexusParticles : MonoBehaviour {
             {
                 break;
             }
+
+
             int counter = 0;
             Vector3 p1_position = particles[i].position;
+            if (triangles && vertCount < maxVertices)
+            {
+                newVertices[vertCount] = p1_position;
+                vertCount++;
+            }
+            int thisVertCount = 0;
             for (int j = i +1; j < particleCount; j++)
             {
                 if (!particles[i].startColor.Equals(particles[j].startColor))
@@ -83,6 +106,12 @@ public class PlexusParticles : MonoBehaviour {
 
                 if (distanceSqr < maxDistanceSqr)
                 {
+                    if (triangles && thisVertCount < 2 && vertCount < maxVertices)
+                    {
+                        newVertices[vertCount] = p2_position;
+                        thisVertCount++;
+                        vertCount++;
+                    }
                     LineRenderer lr;
                     if (lineRendererIndex == lineRendererCount)
                     {
@@ -106,6 +135,20 @@ public class PlexusParticles : MonoBehaviour {
             }
 
         }
+        if (triangles)
+        {
+            for (int i = 0; i < newUV.Length; i++)
+            {
+                newUV[i] = new Vector2(newVertices[i].x, newVertices[i].z);
+                newTriangles[i] = i;
+            }
+            Mesh mesh = new Mesh();
+            GetComponent<MeshFilter>().mesh = mesh;
+            mesh.vertices = newVertices;
+            mesh.uv = newUV;
+            mesh.triangles = newTriangles;
+        }
+        
 
         for (int i = lineRendererIndex; i < lineRendererCount; i++)
         {
