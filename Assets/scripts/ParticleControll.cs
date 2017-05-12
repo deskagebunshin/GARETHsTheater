@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityStandardAssets.ImageEffects;
+using Kino;
+
 
 public class ParticleControll : MonoBehaviour {
     private ParticleSystem particleSystem;
@@ -8,20 +11,34 @@ public class ParticleControll : MonoBehaviour {
     private ParticleSystem.MainModule particleSystemMainModule;
     public Vector2 shakeRange;
     public Vector3 allowedDistance;
-    private bool shakeParticlesOn;
+    public bool shakeParticlesOn;
     private int particleCountGlobal = 0;
     public float particleSpeedXY;
-    private int[] musicNumbers = new int[] {1,2,3,4,5,6,7,8,7,6,5,4,3,2,3};
-    private int totalNotes = 66;
+    private int[] musicNumbers = new int[] {2,3,4,5,6,7,8,7,6,5,4,3,2,3};
+    private int totalNotes = 0;
     public Color[] musicBar;
     public bool circle = false;
     private Vector2 center = Vector2.zero;
     public float speed = 1;
     public float diameter = 10;
     public float circleTolerance = 0.2f;
+    private PlexusParticles plexus;
+    public ColorCorrectionCurves CameraColorCorrection;
+    public AnalogGlitch CameraAnalog;   
+    public DigitalGlitch CameraDigital;
+    public Vector2 particleInitialPos;
+    public GameObject warpSpeed;
+    private bool warpActive = false;
+
+
     // Use this for initialization
     void Start () {
+        for (int i = 0; i < musicNumbers.Length ;i++)
+        {
+            totalNotes += musicNumbers[i];
+        }
         
+        plexus = GetComponent<PlexusParticles>();
         particleSystem = GetComponent<ParticleSystem>();
         particleSystemMainModule = particleSystem.main;
     }
@@ -32,25 +49,35 @@ public class ParticleControll : MonoBehaviour {
 
         if (Input.GetButtonUp("Jump"))
         {
-            
-            var emitParams = new ParticleSystem.EmitParams();
-            emitParams.startColor = GetColor();
-            emitParams.velocity = new Vector3(Random.Range(-particleSpeedXY, particleSpeedXY), Random.Range(-particleSpeedXY, particleSpeedXY), 0.5f);
-            particleSystem.Emit(emitParams, 1);
-            particleCountGlobal++;
+            EmitNote();
         }
-
+        /*
         if (Input.GetButton("Fire1"))
         {
             shakeParticlesOn = true;        
         } else
         {
             shakeParticlesOn = false;
+        }*/
+
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            MakeParticlesSphere();
         }
-        
-        if (Input.GetButtonDown("Fire2"))
+
+        if (Input.GetKeyDown(KeyCode.RightShift))
         {
             MultiplyParticles(1);
+        }
+
+        if (Input.GetKeyDown(KeyCode.RightControl))
+        {
+            plexus.triangles = !plexus.triangles;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Backslash))
+        {
+            circle = !circle;
         }
 
         if (shakeParticlesOn)
@@ -61,7 +88,28 @@ public class ParticleControll : MonoBehaviour {
         {
             GravityAttractor();
         }
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            CameraColorCorrection.enabled = !CameraColorCorrection.enabled;
+        }
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            CameraAnalog.enabled = !CameraAnalog.enabled;
+        }
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            CameraDigital.enabled = !CameraDigital.enabled;
+        }
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            warpActive = !warpActive;
+            warpSpeed.SetActive(warpActive);
+        }
+
+
     }
+
+
 
     Color GetColor()
     {
@@ -81,10 +129,26 @@ public class ParticleControll : MonoBehaviour {
             }
         }
 
-        Debug.Log("count " + count);
+/*        Debug.Log("count " + count);
         Debug.Log("particleGlobal " + particleCountGlobal);
-        Debug.Log("color " + color );
+        Debug.Log("color " + color ); 
+s*/
         return musicBar[color];
+    }
+
+    public void EmitNote()
+    {
+        var emitParams = new ParticleSystem.EmitParams();
+        emitParams.startColor = GetColor();
+        emitParams.position = new Vector3(Random.Range(-particleInitialPos.x, particleInitialPos.x), Random.Range(-particleInitialPos.y, particleInitialPos.y), -11.1f);
+        emitParams.velocity = new Vector3(Random.Range(-particleSpeedXY, particleSpeedXY), Random.Range(-particleSpeedXY, particleSpeedXY), 0.5f);
+        particleSystem.Emit(emitParams, 1);
+        particleCountGlobal++;
+    }
+
+    void MakeParticlesSphere()
+    {
+        particleSystem.Emit(100);
     }
 
     void MultiplyParticles(int number)

@@ -19,11 +19,16 @@ public class PlexusParticles : MonoBehaviour {
     Transform _Transform;
     public int maxParticleConections;
     public int maxConectionsTotal;
+    private MeshFilter meshFilter;
+    private MeshRenderer meshRender;
     // Use this for initialization
     void Start () {
+        meshRender = GetComponent<MeshRenderer>();
         particleSystem = GetComponent<ParticleSystem>();
         particleSystemMainModule = particleSystem.main;
-	}
+        meshFilter = GetComponent<MeshFilter>();
+
+    }
 	
 	// Update is called once per frame
 	void LateUpdate () {
@@ -42,6 +47,9 @@ public class PlexusParticles : MonoBehaviour {
                 newUV = new Vector2[maxVertices];
                 newTriangles = new int[maxVertices];
             }
+        } else
+        {
+
         }
 
         particleSystem.GetParticles(particles);
@@ -78,6 +86,13 @@ public class PlexusParticles : MonoBehaviour {
                                  
                 }
         }
+        if (triangles)
+        {
+            meshRender.enabled = true;   
+        } else
+        {
+            meshRender.enabled = false;
+        }
         
         for (int i = 0; i < particleCount; i++)
         {
@@ -91,9 +106,11 @@ public class PlexusParticles : MonoBehaviour {
             Vector3 p1_position = particles[i].position;
             if (triangles && vertCount < maxVertices)
             {
+                vertCount = vertCount - vertCount % 3;
                 newVertices[vertCount] = p1_position;
                 vertCount++;
-            }
+            } 
+
             int thisVertCount = 0;
             for (int j = i +1; j < particleCount; j++)
             {
@@ -101,6 +118,7 @@ public class PlexusParticles : MonoBehaviour {
                 {
                     break;
                 }
+                
                 Vector3 p2_position = particles[j].position;
                 float distanceSqr = Vector3.SqrMagnitude(p2_position - p1_position);
 
@@ -137,13 +155,18 @@ public class PlexusParticles : MonoBehaviour {
         }
         if (triangles)
         {
+            var nullVector = new Vector3(-100, -100, -100);
+            for (int i = vertCount + 1; i < newVertices.Length; i++)
+            {
+                newUV[i] = nullVector;
+            }
             for (int i = 0; i < newUV.Length; i++)
             {
                 newUV[i] = new Vector2(newVertices[i].x, newVertices[i].z);
                 newTriangles[i] = i;
             }
             Mesh mesh = new Mesh();
-            GetComponent<MeshFilter>().mesh = mesh;
+            meshFilter.mesh = mesh;
             mesh.vertices = newVertices;
             mesh.uv = newUV;
             mesh.triangles = newTriangles;
