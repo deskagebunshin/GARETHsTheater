@@ -148,7 +148,18 @@ s*/
 
     void MakeParticlesSphere()
     {
-        particleSystem.Emit(100);
+        StartCoroutine(EmitNumberOfParticles(100, 5.0f));
+    }
+
+    IEnumerator EmitNumberOfParticles (int number, float seconds)
+    {
+        for (int i = 0; i < number; i++)
+        {
+            particleSystem.Emit(1);
+            yield return new WaitForSeconds(seconds / number);
+        }
+        
+
     }
 
     void MultiplyParticles(int number)
